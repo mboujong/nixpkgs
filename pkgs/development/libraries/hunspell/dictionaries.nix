@@ -135,6 +135,38 @@ let
       '';
     };
 
+  mkDictFromGitHub =
+    { shortName, srcs, shortDescription, longDescription, dictFileName }:
+    stdenv.mkDerivation rec {
+      name = "hunspell-dict-${shortName}-wooorm-${version}";
+      version = "20161207";
+
+      inherit srcs;
+
+      phases = ["unpackPhase" "installPhase"];
+      sourceRoot = ".";
+      # Copy files stripping until first dash (path and hash)
+      unpackCmd = "cp $curSrc \${curSrc##*-}";
+      installPhase = ''
+        # hunspell dicts
+        install -dm755 "$out/share/hunspell"
+        install -m644 ${dictFileName}.dic "$out/share/hunspell/"
+        install -m644 ${dictFileName}.aff "$out/share/hunspell/"
+        # myspell dicts symlinks
+        install -dm755 "$out/share/myspell/dicts"
+        ln -sv "$out/share/hunspell/${dictFileName}.dic" "$out/share/myspell/dicts/"
+        ln -sv "$out/share/hunspell/${dictFileName}.aff" "$out/share/myspell/dicts/"
+      '';
+
+      meta = with stdenv.lib; {
+        homepage = https://github.com/wooorm/;
+        description = shortDescription;
+        longDescription = longDescription;
+        license = licenses.gpl2;
+        maintainers = with maintainers; [ wooorm ];
+        platforms = platforms.all;
+      };
+
   mkDictFromXuxen =
     { shortName, srcs, shortDescription, longDescription, dictFileName }:
     stdenv.mkDerivation rec {
@@ -395,6 +427,24 @@ in {
       sha256 = "0m9frz75fx456bczknay5i446gdcp1smm48lc0qfwzhz0j3zcdrd";
     };
   };
+
+  /* GERMAN  */
+
+  de-de = mkDictFromGitHub {
+    shortName = "de-de";
+	dictFileName = "de_DE";
+    	shortDescription = "German";
+	longDescription = ''Korrektur der Rechtschreibung für deutsche Sprache'';
+    srcs = [
+      (fetchurl {
+        url = "https://github.com/wooorm/dictionaries/blob/master/dictionaries/de/index.aff";
+        sha256 = "c8e3160dc0cedd0f17c2a0d02644a7042ef30e73e8b86e37d8cbb7f55e7e5c4a";
+      })
+      (fetchurl {
+        url = "https://github.com/wooorm/dictionaries/blob/master/dictionaries/de/index.dic";
+        sha256 = "b35f89c991e3dfb81ca7bb38f88ab6f02cb9cf7a226cfc424abc0e06502fb287";
+      })
+    ];
 
   /* BASQUE */
 
